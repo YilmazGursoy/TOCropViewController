@@ -29,13 +29,12 @@
 @property (nonatomic, strong) UIView *backgroundView;
 
 @property (nonatomic, strong, readwrite) UIButton *doneTextButton;
-@property (nonatomic, strong, readwrite) UIButton *doneIconButton;
 
 @property (nonatomic, strong, readwrite) UIButton *cancelTextButton;
-@property (nonatomic, strong, readwrite) UIButton *cancelIconButton;
 
 @property (nonatomic, strong) UIButton *resetButton;
 @property (nonatomic, strong) UIButton *clampButton;
+
 
 @property (nonatomic, strong) UIButton *rotateButton; // defaults to counterclockwise button for legacy compatibility
 
@@ -47,16 +46,19 @@
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
-    if (self = [super initWithFrame:frame]) {
-        [self setup];
+    self = [super initWithFrame:frame];
+    if (self) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self setup];
+        });
     }
-    
     return self;
 }
 
 - (void)setup {
+    self.backgroundView.userInteractionEnabled = YES;
     self.backgroundView = [[UIView alloc] initWithFrame:self.bounds];
-    self.backgroundView.backgroundColor = [UIColor colorWithWhite:0.12f alpha:1.0f];
+    self.backgroundView.backgroundColor = [UIColor clearColor];
     [self addSubview:self.backgroundView];
     
     // On iOS 9, we can use the new layout features to determine whether we're in an 'Arabic' style language mode
@@ -78,6 +80,11 @@
         resourceBundle = classBundle;
     }
     
+    UIView *backView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height)];
+    backView.backgroundColor = [UIColor clearColor];
+    
+    [self addSubview:backView];
+    
     _doneTextButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [_doneTextButton setTitle: _doneTextButtonTitle ?
         _doneTextButtonTitle : NSLocalizedStringFromTableInBundle(@"Done",
@@ -85,17 +92,19 @@
                                                                   resourceBundle,
                                                                   nil)
                      forState:UIControlStateNormal];
-    [_doneTextButton setTitleColor:[UIColor colorWithRed:1.0f green:0.8f blue:0.0f alpha:1.0f] forState:UIControlStateNormal];
+    [_doneTextButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [_doneTextButton.titleLabel setFont:[UIFont systemFontOfSize:17.0f]];
     [_doneTextButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
     [_doneTextButton sizeToFit];
-    [self addSubview:_doneTextButton];
+    _doneTextButton.layer.cornerRadius = 4.0;
     
-    _doneIconButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [_doneIconButton setImage:[TOCropToolbar doneImage] forState:UIControlStateNormal];
-    [_doneIconButton setTintColor:[UIColor colorWithRed:1.0f green:0.8f blue:0.0f alpha:1.0f]];
-    [_doneIconButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:_doneIconButton];
+    _doneTextButton.layer.shadowRadius = 0;
+    _doneTextButton.layer.shadowOpacity = 1.0;
+    _doneTextButton.layer.shadowOffset = CGSizeMake(0.0, 2.0);
+    _doneTextButton.layer.shadowColor = [UIColor colorWithRed:32.0/255.0 green:104.0/255.0 blue:152.0/255.0 alpha:1.0].CGColor;
+    
+    
+    [backView addSubview:_doneTextButton];
     
     _cancelTextButton = [UIButton buttonWithType:UIButtonTypeSystem];
     
@@ -106,14 +115,18 @@
                                                                     nil)
                        forState:UIControlStateNormal];
     [_cancelTextButton.titleLabel setFont:[UIFont systemFontOfSize:17.0f]];
+    [_cancelTextButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [_cancelTextButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
     [_cancelTextButton sizeToFit];
-    [self addSubview:_cancelTextButton];
+    _cancelTextButton.layer.cornerRadius = 4.0;
     
-    _cancelIconButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [_cancelIconButton setImage:[TOCropToolbar cancelImage] forState:UIControlStateNormal];
-    [_cancelIconButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:_cancelIconButton];
+    _cancelTextButton.layer.shadowRadius = 0;
+    _cancelTextButton.layer.shadowOpacity = 1.0;
+    _cancelTextButton.layer.shadowOffset = CGSizeMake(0.0, 2.0);
+    _cancelTextButton.layer.shadowColor = [UIColor colorWithRed:32.0/255.0 green:104.0/255.0 blue:152.0/255.0 alpha:1.0].CGColor;
+    
+    [backView addSubview:_cancelTextButton];
+    [self addSubview:backView];
     
     _clampButton = [UIButton buttonWithType:UIButtonTypeSystem];
     _clampButton.contentMode = UIViewContentModeCenter;
@@ -139,10 +152,6 @@
     _resetButton = [UIButton buttonWithType:UIButtonTypeSystem];
     _resetButton.contentMode = UIViewContentModeCenter;
     _resetButton.tintColor = [UIColor whiteColor];
-    _resetButton.enabled = NO;
-    [_resetButton setImage:[TOCropToolbar resetImage] forState:UIControlStateNormal];
-    [_resetButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
-    [self addSubview:_resetButton];
 }
 
 - (void)layoutSubviews
@@ -152,9 +161,7 @@
     BOOL verticalLayout = (CGRectGetWidth(self.bounds) < CGRectGetHeight(self.bounds));
     CGSize boundsSize = self.bounds.size;
     
-    self.cancelIconButton.hidden = (!verticalLayout);
     self.cancelTextButton.hidden = (verticalLayout);
-    self.doneIconButton.hidden   = (!verticalLayout);
     self.doneTextButton.hidden   = (verticalLayout);
 
     CGRect frame = self.bounds;
@@ -176,107 +183,26 @@
     }
 #endif
     
-    if (verticalLayout == NO) {
-        CGFloat insetPadding = 10.0f;
-        
-        // Work out the cancel button frame
-        CGRect frame = CGRectZero;
-        frame.size.height = 44.0f;
-        frame.size.width = MIN(self.frame.size.width / 3.0, self.cancelTextButton.frame.size.width);
-
-        //If normal layout, place on the left side, else place on the right
-        if (self.reverseContentLayout == NO) {
-            frame.origin.x = insetPadding;
-        }
-        else {
-            frame.origin.x = boundsSize.width - (frame.size.width + insetPadding);
-        }
-        self.cancelTextButton.frame = frame;
-        
-        // Work out the Done button frame
-        frame.size.width = MIN(self.frame.size.width / 3.0, self.doneTextButton.frame.size.width);
-        
-        if (self.reverseContentLayout == NO) {
-            frame.origin.x = boundsSize.width - (frame.size.width + insetPadding);
-        }
-        else {
-            frame.origin.x = insetPadding;
-        }
-        self.doneTextButton.frame = frame;
-        
-        // Work out the frame between the two buttons where we can layout our action buttons
-        CGFloat x = self.reverseContentLayout ? CGRectGetMaxX(self.doneTextButton.frame) : CGRectGetMaxX(self.cancelTextButton.frame);
-        CGFloat width = 0.0f;
-        
-        if (self.reverseContentLayout == NO) {
-            width = CGRectGetMinX(self.doneTextButton.frame) - CGRectGetMaxX(self.cancelTextButton.frame);
-        }
-        else {
-            width = CGRectGetMinX(self.cancelTextButton.frame) - CGRectGetMaxX(self.doneTextButton.frame);
-        }
-        
-        CGRect containerRect = CGRectIntegral((CGRect){x,frame.origin.y,width,44.0f});
-
-#if TOCROPTOOLBAR_DEBUG_SHOWING_BUTTONS_CONTAINER_RECT
-        containerView.frame = containerRect;
-#endif
-        
-        CGSize buttonSize = (CGSize){44.0f,44.0f};
-        
-        NSMutableArray *buttonsInOrderHorizontally = [NSMutableArray new];
-        if (!self.rotateCounterclockwiseButtonHidden) {
-            [buttonsInOrderHorizontally addObject:self.rotateCounterclockwiseButton];
-        }
-        
-        [buttonsInOrderHorizontally addObject:self.resetButton];
-        
-        if (!self.clampButtonHidden) {
-            [buttonsInOrderHorizontally addObject:self.clampButton];
-        }
-        
-        if (!self.rotateClockwiseButtonHidden) {
-            [buttonsInOrderHorizontally addObject:self.rotateClockwiseButton];
-        }
-        
-        [self layoutToolbarButtons:buttonsInOrderHorizontally withSameButtonSize:buttonSize inContainerRect:containerRect horizontally:YES];
-    }
-    else {
-        CGRect frame = CGRectZero;
-        frame.size.height = 44.0f;
-        frame.size.width = 44.0f;
-        frame.origin.y = CGRectGetHeight(self.bounds) - 44.0f;
-        self.cancelIconButton.frame = frame;
-        
-        frame.origin.y = self.statusBarHeightInset;
-        frame.size.width = 44.0f;
-        frame.size.height = 44.0f;
-        self.doneIconButton.frame = frame;
-        
-        CGRect containerRect = (CGRect){0,CGRectGetMaxY(self.doneIconButton.frame),44.0f,CGRectGetMinY(self.cancelIconButton.frame)-CGRectGetMaxY(self.doneIconButton.frame)};
-        
-#if TOCROPTOOLBAR_DEBUG_SHOWING_BUTTONS_CONTAINER_RECT
-        containerView.frame = containerRect;
-#endif
-        
-        CGSize buttonSize = (CGSize){44.0f,44.0f};
-        
-        NSMutableArray *buttonsInOrderVertically = [NSMutableArray new];
-        if (!self.rotateCounterclockwiseButtonHidden) {
-            [buttonsInOrderVertically addObject:self.rotateCounterclockwiseButton];
-        }
-        
-        [buttonsInOrderVertically addObject:self.resetButton];
-        
-        if (!self.clampButtonHidden) {
-            [buttonsInOrderVertically addObject:self.clampButton];
-        }
-        
-        if (!self.rotateClockwiseButtonHidden) {
-            [buttonsInOrderVertically addObject:self.rotateClockwiseButton];
-        }
-        
-        [self layoutToolbarButtons:buttonsInOrderVertically withSameButtonSize:buttonSize inContainerRect:containerRect horizontally:NO];
-    }
+    self.doneTextButton.backgroundColor = [UIColor colorWithRed:44.0/255.0 green:134.0/255.0 blue:194.0/255.0 alpha:1.0];
+    self.cancelTextButton.backgroundColor = [UIColor colorWithRed:44.0/255.0 green:134.0/255.0 blue:194.0/255.0 alpha:1.0];
+    
+    _cancelTextButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [[_cancelTextButton.leftAnchor constraintEqualToAnchor:self.leftAnchor constant:20] setActive:YES];
+    [[_cancelTextButton.topAnchor constraintEqualToAnchor:self.topAnchor constant:20] setActive:YES];
+    [[_cancelTextButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-20] setActive:YES];
+    
+    _doneTextButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [[self.doneTextButton.topAnchor constraintEqualToAnchor:self.topAnchor constant:20] setActive:YES];
+    [[self.doneTextButton.rightAnchor constraintEqualToAnchor:self.rightAnchor constant:-20] setActive:YES];
+    [[self.doneTextButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-20] setActive:YES];
+    
+    [_cancelTextButton.trailingAnchor constraintEqualToAnchor:_doneTextButton.leadingAnchor constant:-10].active = YES;
+    [_cancelTextButton.widthAnchor constraintEqualToAnchor:_doneTextButton.widthAnchor multiplier:1].active = YES;
+    
+    _cancelTextButton.userInteractionEnabled = YES;
+    _doneTextButton.userInteractionEnabled = YES;
+    _doneTextButton.superview.userInteractionEnabled = YES;
+    _doneTextButton.superview.superview.userInteractionEnabled = YES;
 }
 
 // The convenience method for calculating button's frame inside of the container rect
@@ -303,26 +229,10 @@
 
 - (void)buttonTapped:(id)button
 {
-    if (button == self.cancelTextButton || button == self.cancelIconButton) {
-        if (self.cancelButtonTapped)
-            self.cancelButtonTapped();
-    }
-    else if (button == self.doneTextButton || button == self.doneIconButton) {
-        if (self.doneButtonTapped)
-            self.doneButtonTapped();
-    }
-    else if (button == self.resetButton && self.resetButtonTapped) {
-        self.resetButtonTapped();
-    }
-    else if (button == self.rotateCounterclockwiseButton && self.rotateCounterclockwiseButtonTapped) {
-        self.rotateCounterclockwiseButtonTapped();
-    }
-    else if (button == self.rotateClockwiseButton && self.rotateClockwiseButtonTapped) {
-        self.rotateClockwiseButtonTapped();
-    }
-    else if (button == self.clampButton && self.clampButtonTapped) {
-        self.clampButtonTapped();
-        return;
+    if (button == self.cancelTextButton) {
+        self.cancelButtonTapped();
+    } else if ( button == self.doneTextButton ) {
+        self.doneButtonTapped();
     }
 }
 
@@ -373,22 +283,17 @@
 
 - (CGRect)doneButtonFrame
 {
-    if (self.doneIconButton.hidden == NO)
-        return self.doneIconButton.frame;
-    
     return self.doneTextButton.frame;
 }
 
 - (void)setCancelTextButtonTitle:(NSString *)cancelTextButtonTitle {
     _cancelTextButtonTitle = cancelTextButtonTitle;
     [_cancelTextButton setTitle:_cancelTextButtonTitle forState:UIControlStateNormal];
-    [_cancelTextButton sizeToFit];
 }
 
 - (void)setDoneTextButtonTitle:(NSString *)doneTextButtonTitle {
     _doneTextButtonTitle = doneTextButtonTitle;
     [_doneTextButton setTitle:_doneTextButtonTitle forState:UIControlStateNormal];
-    [_doneTextButton sizeToFit];
 }
 
 #pragma mark - Image Generation -

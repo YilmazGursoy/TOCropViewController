@@ -104,7 +104,7 @@ static const CGFloat kTOCropOverLayerCornerWidth = 20.0f;
     
     //corner liness
     NSArray *cornerLines = @[self.topLeftLineViews, self.topRightLineViews, self.bottomRightLineViews, self.bottomLeftLineViews];
-    for (NSInteger i = 0; i < 4; i++) {
+    for (NSInteger i = 0; i < 0; i++) {
         NSArray *cornerLine = cornerLines[i];
         
         CGRect verticalFrame = CGRectZero, horizontalFrame = CGRectZero;
