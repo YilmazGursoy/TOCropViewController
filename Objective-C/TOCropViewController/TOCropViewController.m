@@ -102,6 +102,10 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 84.0f;
     return self;
 }
 
+-(UIModalPresentationStyle)modalPresentationStyle {
+    return UIModalPresentationFullScreen;
+}
+
 - (instancetype)initWithImage:(UIImage *)image
 {
     return [self initWithCroppingStyle:TOCropViewCroppingStyleDefault image:image];
