@@ -352,7 +352,8 @@ public class CropViewController: UIViewController, TOCropViewControllerDelegate 
      Forward status bar status style changes to the crop view controller
      :nodoc:
      */
-    public override var childForStatusBarStyle: UIViewController? {
+    
+    public override var childViewControllerForStatusBarHidden: UIViewController? {
         return toCropViewController
     }
     
@@ -418,9 +419,9 @@ public class CropViewController: UIViewController, TOCropViewControllerDelegate 
         toCropViewController.viewDidLayoutSubviews()
     }
     
-    public override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge {
+    public override func preferredScreenEdgesDeferringSystemGestures() -> UIRectEdge {
         if #available(iOS 11.0, *) {
-            return toCropViewController.preferredScreenEdgesDeferringSystemGestures
+            return toCropViewController.preferredScreenEdgesDeferringSystemGestures()
         }
         
         return UIRectEdge.all
@@ -524,10 +525,10 @@ public class CropViewController: UIViewController, TOCropViewControllerDelegate 
 
 extension CropViewController {
     fileprivate func setUpCropController() {
-        addChild(toCropViewController)
+        addChildViewController(toCropViewController)
         transitioningDelegate = (toCropViewController as! UIViewControllerTransitioningDelegate)
         toCropViewController.delegate = self
-        toCropViewController.didMove(toParent: self)
+        toCropViewController.didMove(toParentViewController: self)
     }
     
     fileprivate func setUpDelegateHandlers() {
