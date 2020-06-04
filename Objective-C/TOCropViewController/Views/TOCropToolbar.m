@@ -87,43 +87,27 @@
     
     _doneTextButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [_doneTextButton setTitle: _doneTextButtonTitle ?
-        _doneTextButtonTitle : NSLocalizedStringFromTableInBundle(@"Done",
-                                                                  @"TOCropViewControllerLocalizable",
-                                                                  resourceBundle,
-                                                                  nil)
-                     forState:UIControlStateNormal];
+        _doneTextButtonTitle : @"Onayla" forState:UIControlStateNormal];
     [_doneTextButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [_doneTextButton.titleLabel setFont:[UIFont systemFontOfSize:17.0f]];
     [_doneTextButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
     [_doneTextButton sizeToFit];
-    _doneTextButton.layer.cornerRadius = 4.0;
-    
-    _doneTextButton.layer.shadowRadius = 0;
-    _doneTextButton.layer.shadowOpacity = 1.0;
-    _doneTextButton.layer.shadowOffset = CGSizeMake(0.0, 2.0);
-    _doneTextButton.layer.shadowColor = [UIColor colorWithRed:32.0/255.0 green:104.0/255.0 blue:152.0/255.0 alpha:1.0].CGColor;
-    
+    _doneTextButton.layer.cornerRadius = 6.0;
     
     [backView addSubview:_doneTextButton];
     
     _cancelTextButton = [UIButton buttonWithType:UIButtonTypeSystem];
     
     [_cancelTextButton setTitle: _cancelTextButtonTitle ?
-        _cancelTextButtonTitle : NSLocalizedStringFromTableInBundle(@"Cancel",
-                                                                    @"TOCropViewControllerLocalizable",
-                                                                    resourceBundle,
-                                                                    nil)
-                       forState:UIControlStateNormal];
+        _cancelTextButtonTitle : @"İptal" forState:UIControlStateNormal];
     [_cancelTextButton.titleLabel setFont:[UIFont systemFontOfSize:17.0f]];
     [_cancelTextButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [_cancelTextButton addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
     [_cancelTextButton sizeToFit];
-    _cancelTextButton.layer.cornerRadius = 4.0;
+    _cancelTextButton.layer.cornerRadius = 6.0;
+    _cancelTextButton.layer.borderWidth = 1.0;
+    _cancelTextButton.layer.borderColor = [[UIColor colorWithRed:83.0/255.0 green:81.0/255.0 blue:79.0/255.0 alpha:1.0] CGColor];
     
-    _cancelTextButton.layer.shadowRadius = 0;
-    _cancelTextButton.layer.shadowOpacity = 1.0;
-    _cancelTextButton.layer.shadowOffset = CGSizeMake(0.0, 2.0);
-    _cancelTextButton.layer.shadowColor = [UIColor colorWithRed:32.0/255.0 green:104.0/255.0 blue:152.0/255.0 alpha:1.0].CGColor;
     
     [backView addSubview:_cancelTextButton];
     [self addSubview:backView];
@@ -183,8 +167,8 @@
     }
 #endif
     
-    self.doneTextButton.backgroundColor = [UIColor colorWithRed:44.0/255.0 green:134.0/255.0 blue:194.0/255.0 alpha:1.0];
-    self.cancelTextButton.backgroundColor = [UIColor colorWithRed:44.0/255.0 green:134.0/255.0 blue:194.0/255.0 alpha:1.0];
+    self.doneTextButton.backgroundColor = [UIColor colorWithRed:135.0/255.0 green:0.0/255.0 blue:82.0/255.0 alpha:1.0];
+    self.cancelTextButton.backgroundColor = [UIColor colorWithRed:49.0/255.0 green:48.0/255.0 blue:46.0/255.0 alpha:1.0];
     
     _cancelTextButton.translatesAutoresizingMaskIntoConstraints = NO;
     [[_cancelTextButton.leftAnchor constraintEqualToAnchor:self.leftAnchor constant:20] setActive:YES];
